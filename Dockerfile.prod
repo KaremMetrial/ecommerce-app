@@ -1,0 +1,94 @@
+# Production Dockerfile for E-Commerce Application
+FROM php:8.2-fpm-alpine
+
+# Set working directory
+WORKDIR /var/www/html
+
+# Install system dependencies
+RUN apk add --no-cache \
+    git \
+    curl \
+    libpng-dev \
+    oniguruma-dev \
+    libxml2-dev \
+    zip \
+    unzip \
+    libzip-dev \
+    libwebp-dev \
+    libjpeg-turbo-dev \
+    libpng-dev \
+    freetype-dev \
+    libxpm-dev \
+    autoconf \
+    g++ \
+    make \
+    icu-dev \
+    libintl-dev \
+    libmcrypt-dev \
+    openssl-dev \
+    pkgconfig \
+    libzip-dev \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    libwebp-dev \
+    freetype-dev \
+    libxpm-dev
+
+# Install PHP extensions
+RUN docker-php-ext-install \
+    pdo_mysql \
+    mbstring \
+    exif \
+    pcntl \
+    bcmath \
+    soap \
+    intl \
+    zip \
+    gd \
+    opcache \
+    redis \
+    sockets
+
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Set environment variables
+ENV APP_ENV=production
+ENV APP_DEBUG=false
+ENV APP_URL=https://your-domain.com
+
+# Copy application files
+COPY . /var/www/html
+
+# Install Composer dependencies
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+# Set permissions
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html/storage \
+    && chmod -R 755 /var/www/html/bootstrap/cache
+
+# Install Node.js and build frontend
+RUN apk add --no-cache nodejs npm
+
+COPY package*.json ./
+RUN npm ci --only=production
+
+COPY . .
+RUN npm run build
+
+# Copy optimized files
+COPY --from=nginx:alpine /etc/nginx/mime.types /etc/nginx/mime.types
+
+# Expose port
+EXPOSE 9000
+
+# Set user
+USER www-data
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:9000/health || exit 1
+
+# Default command
+CMD ["php-fpm"]

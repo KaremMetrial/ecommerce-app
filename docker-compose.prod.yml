@@ -1,0 +1,204 @@
+version: '3.8'
+
+services:
+  # Application Service
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    image: ecommerce-app:latest
+    container_name: ecommerce-app-prod
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./storage:/var/www/html/storage
+      - ./bootstrap/cache:/var/www/html/bootstrap/cache
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - APP_URL=${APP_URL:-https://your-domain.com}
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-ecommerce}
+      - DB_USERNAME=${DB_USERNAME:-ecommerce_user}
+      - DB_PASSWORD=${DB_PASSWORD:-secure_password}
+      - CACHE_DRIVER=redis
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - QUEUE_CONNECTION=redis
+      - MAIL_MAILER=smtp
+      - MAIL_HOST=${MAIL_HOST:-smtp.gmail.com}
+      - MAIL_PORT=${MAIL_PORT:-587}
+      - MAIL_USERNAME=${MAIL_USERNAME:-your-email@gmail.com}
+      - MAIL_PASSWORD=${MAIL_PASSWORD:-your-app-password}
+      - MAIL_ENCRYPTION=tls
+      - MAIL_FROM_ADDRESS=${MAIL_FROM_ADDRESS:-noreply@your-domain.com}
+      - MAIL_FROM_NAME=${MAIL_FROM_NAME:-${APP_NAME}}
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - ecommerce-network
+
+  # Nginx Web Server
+  nginx:
+    image: nginx:alpine
+    container_name: ecommerce-nginx-prod
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/ssl:/etc/nginx/ssl:ro
+      - ./storage/app/public:/var/www/html/public:ro
+    depends_on:
+      - app
+    networks:
+      - ecommerce-network
+
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: ecommerce-mysql-prod
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-very_secure_root_password}
+      MYSQL_DATABASE: ${DB_DATABASE:-ecommerce}
+      MYSQL_USER: ${DB_USERNAME:-ecommerce_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secure_password}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./docker/mysql/my.cnf:/etc/mysql/conf.d:ro
+    networks:
+      - ecommerce-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: ecommerce-redis-prod
+    restart: unless-stopped
+    command: redis-server --appendonly yes --appendfsync everysec
+    volumes:
+      - redis_data:/data
+      - ./docker/redis/redis.conf:/etc/redis/redis.conf:ro
+    networks:
+      - ecommerce-network
+
+  # Queue Worker
+  queue:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    image: ecommerce-app:latest
+    container_name: ecommerce-queue-prod
+    restart: unless-stopped
+    command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+    working_dir: /var/www/html
+    volumes:
+      - ./storage:/var/www/html/storage
+      - ./bootstrap/cache:/var/www/html/bootstrap/cache
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-ecommerce}
+      - DB_USERNAME=${DB_USERNAME:-ecommerce_user}
+      - DB_PASSWORD=${DB_PASSWORD:-secure_password}
+      - CACHE_DRIVER=redis
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - QUEUE_CONNECTION=redis
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - ecommerce-network
+
+  # Scheduler
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    image: ecommerce-app:latest
+    container_name: ecommerce-scheduler-prod
+    restart: unless-stopped
+    command: php artisan schedule:work
+    working_dir: /var/www/html
+    volumes:
+      - ./storage:/var/www/html/storage
+      - ./bootstrap/cache:/var/www/html/bootstrap/cache
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-ecommerce}
+      - DB_USERNAME=${DB_USERNAME:-ecommerce_user}
+      - DB_PASSWORD=${DB_PASSWORD:-secure_password}
+      - CACHE_DRIVER=redis
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - QUEUE_CONNECTION=redis
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - ecommerce-network
+
+  # Elasticsearch (Optional - for search)
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.8.0
+    container_name: ecommerce-elasticsearch-prod
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - ecommerce-network
+
+  # Logstash (Optional - for log aggregation)
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.8.0
+    container_name: ecommerce-logstash-prod
+    restart: unless-stopped
+    volumes:
+      - ./docker/logstash/logstash.yml:/usr/share/logstash/pipeline/logstash.yml:ro
+      - ./storage/logs:/var/log/app
+    depends_on:
+      - elasticsearch
+    networks:
+      - ecommerce-network
+
+  # Kibana (Optional - for log visualization)
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.8.0
+    container_name: ecommerce-kibana-prod
+    restart: unless-stopped
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+    networks:
+      - ecommerce-network
+
+networks:
+  ecommerce-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
