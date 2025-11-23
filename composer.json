@@ -14,6 +14,8 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
         "maatwebsite/excel": "^3.1",
+        "maennchen/zipstream-php": "^2.1",
+        "phpoffice/phpspreadsheet": "^1.29",
         "spatie/laravel-permission": "^6.21"
     },
     "require-dev": {
