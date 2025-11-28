@@ -23,21 +23,8 @@ class WishlistItemFactory extends Factory
         return [
             'wishlist_id' => Wishlist::factory(),
             'product_id' => Product::factory(),
-            'product_variant_id' => fake()->optional(0.3)->create(ProductVariant::class)->id,
-            'quantity' => fake()->numberBetween(1, 5),
-            'priority' => fake()->randomElement(['low', 'medium', 'high']),
+            'product_variant_id' => null,
             'notes' => fake()->optional(0.3)->sentence(),
-            'added_at' => fake()->dateTimeBetween('-3 months', 'now'),
-            'metadata' => [
-                'price_when_added' => fake()->randomFloat(2, 10, 500),
-                'sale_price_when_added' => fake()->optional(0.3)->randomFloat(2, 5, 300),
-                'in_stock_when_added' => fake()->boolean(80),
-                'notification_sent' => false,
-                'price_drop_notification' => fake()->boolean(30),
-                'back_in_stock_notification' => fake()->boolean(50),
-                'target_price' => fake()->optional(0.4)->randomFloat(2, 5, 300),
-                'last_price_check' => fake()->optional(0.7)->dateTimeBetween('-1 month', 'now'),
-            ],
         ];
     }
 

@@ -25,7 +25,6 @@ class WishlistSeeder extends Seeder
 
                 $wishlist = Wishlist::factory()->create([
                     'user_id' => $user->id,
-                    'is_default' => $isDefault,
                     'is_public' => $isPublic,
                 ]);
 

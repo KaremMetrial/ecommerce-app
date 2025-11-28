@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CartResource;
+use App\Http\Responses\ApiResponse;
 use App\Models\Cart;
 use App\Models\Product;
 use App\Models\ProductVariant;
@@ -13,13 +14,13 @@ use Illuminate\Http\Response;
 
 class CartController extends Controller
 {
-    public function index(Request $request): CartResource
+    public function index(Request $request): JsonResponse
     {
         $cart = $this->getUserCart($request);
 
         $cart->load(['items.product', 'items.variant']);
 
-        return new CartResource($cart);
+        return ApiResponse::success(new CartResource($cart));
     }
 
     public function addItem(Request $request): JsonResponse
@@ -40,15 +41,11 @@ class CartController extends Controller
         // Check if product/variant can be purchased
         if ($variant) {
             if (!$variant->canBePurchased($validated['quantity'])) {
-                return response()->json([
-                    'message' => 'Product variant is not available in the requested quantity',
-                ], 422);
+        return ApiResponse::error('Product variant is not available in the requested quantity', 422);
             }
         } else {
             if (!$product->canBePurchased($validated['quantity'])) {
-                return response()->json([
-                    'message' => 'Product is not available in the requested quantity',
-                ], 422);
+                return ApiResponse::error('Product is not available in the requested quantity', 422);
             }
         }
 
@@ -58,10 +55,7 @@ class CartController extends Controller
 
         $cart->load(['items.product', 'items.variant']);
 
-        return response()->json([
-            'message' => 'Item added to cart successfully',
-            'cart' => new CartResource($cart),
-        ]);
+        return ApiResponse::success(new CartResource($cart), 'Item added to cart successfully');
     }
 
     public function updateItem(Request $request, Cart $cart, $itemId): JsonResponse
@@ -75,15 +69,11 @@ class CartController extends Controller
         // Check if product/variant can be purchased with new quantity
         if ($cartItem->variant) {
             if (!$cartItem->variant->canBePurchased($validated['quantity'])) {
-                return response()->json([
-                    'message' => 'Product variant is not available in the requested quantity',
-                ], 422);
+                return ApiResponse::error('Product variant is not available in the requested quantity', 422);
             }
         } else {
             if (!$cartItem->product->canBePurchased($validated['quantity'])) {
-                return response()->json([
-                    'message' => 'Product is not available in the requested quantity',
-                ], 422);
+                return ApiResponse::error('Product is not available in the requested quantity', 422);
             }
         }
 
@@ -91,10 +81,7 @@ class CartController extends Controller
 
         $cart->load(['items.product', 'items.variant']);
 
-        return response()->json([
-            'message' => 'Cart item updated successfully',
-            'cart' => new CartResource($cart),
-        ]);
+        return ApiResponse::success(new CartResource($cart), 'Cart item updated successfully');
     }
 
     public function removeItem(Request $request, Cart $cart, $itemId): JsonResponse
@@ -104,10 +91,7 @@ class CartController extends Controller
 
         $cart->load(['items.product', 'items.variant']);
 
-        return response()->json([
-            'message' => 'Item removed from cart successfully',
-            'cart' => new CartResource($cart),
-        ]);
+        return ApiResponse::success(new CartResource($cart), 'Item removed from cart successfully');
     }
 
     public function clear(Request $request): JsonResponse
@@ -115,10 +99,7 @@ class CartController extends Controller
         $cart = $this->getUserCart($request);
         $cart->clear();
 
-        return response()->json([
-            'message' => 'Cart cleared successfully',
-            'cart' => new CartResource($cart),
-        ]);
+        return ApiResponse::success(new CartResource($cart), 'Cart cleared successfully');
     }
 
     public function applyCoupon(Request $request): JsonResponse
@@ -131,23 +112,16 @@ class CartController extends Controller
         $coupon = \App\Models\Coupon::where('code', $validated['code'])->first();
 
         if (!$coupon->isValidForAmount($cart->subtotal)) {
-            return response()->json([
-                'message' => 'Coupon is not valid for this order amount',
-            ], 422);
+            return ApiResponse::error('Coupon is not valid for this order amount', 422);
         }
 
         if ($cart->applyCoupon($coupon)) {
             $cart->load(['items.product', 'items.variant']);
 
-            return response()->json([
-                'message' => 'Coupon applied successfully',
-                'cart' => new CartResource($cart),
-            ]);
+            return ApiResponse::success(new CartResource($cart), 'Coupon applied successfully');
         }
 
-        return response()->json([
-            'message' => 'Failed to apply coupon',
-        ], 422);
+        return ApiResponse::error('Failed to apply coupon', 422);
     }
 
     public function removeCoupon(Request $request): JsonResponse
@@ -157,10 +131,7 @@ class CartController extends Controller
 
         $cart->load(['items.product', 'items.variant']);
 
-        return response()->json([
-            'message' => 'Coupon removed successfully',
-            'cart' => new CartResource($cart),
-        ]);
+        return ApiResponse::success(new CartResource($cart), 'Coupon removed successfully');
     }
 
     public function summary(Request $request): JsonResponse
@@ -168,7 +139,7 @@ class CartController extends Controller
         $cart = $this->getUserCart($request);
         $cart->load(['items.product', 'items.variant']);
 
-        return response()->json([
+        return ApiResponse::success([
             'item_count' => $cart->getItemCount(),
             'subtotal' => $cart->subtotal,
             'tax_amount' => $cart->tax_amount,

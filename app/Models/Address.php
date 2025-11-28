@@ -25,10 +25,16 @@ class Address extends Model
         'phone',
         'email',
         'is_default',
+        'address_name',
+        'notes',
+        'coordinates',
+        'metadata',
     ];
 
     protected $casts = [
         'is_default' => 'boolean',
+        'coordinates' => 'array',
+        'metadata' => 'array',
     ];
 
     public function user(): BelongsTo

@@ -4,14 +4,16 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ProductResource;
+use App\Http\Responses\ApiResponse;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 
 class ProductController extends Controller
 {
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request): JsonResponse
     {
         $products = Product::query()
             ->with(['categories', 'activeVariants'])
@@ -67,17 +69,17 @@ class ProductController extends Controller
             })
             ->paginate($request->input('per_page', 12));
 
-        return ProductResource::collection($products);
+        return ApiResponse::paginated($products);
     }
 
-    public function show(Product $product): ProductResource
+    public function show(Product $product): JsonResponse
     {
         $product->load(['categories', 'activeVariants']);
 
-        return new ProductResource($product);
+        return ApiResponse::success(new ProductResource($product));
     }
 
-    public function store(Request $request): ProductResource
+    public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -111,10 +113,10 @@ class ProductController extends Controller
 
         $product->load(['categories', 'activeVariants']);
 
-        return new ProductResource($product);
+        return ApiResponse::success(new ProductResource($product), 201);
     }
 
-    public function update(Request $request, Product $product): ProductResource
+    public function update(Request $request, Product $product): JsonResponse
     {
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
@@ -148,24 +150,22 @@ class ProductController extends Controller
 
         $product->load(['categories', 'activeVariants']);
 
-        return new ProductResource($product);
+        return ApiResponse::success(new ProductResource($product));
     }
 
-    public function destroy(Product $product): Response
+    public function destroy(Product $product): JsonResponse
     {
         // Check if product has order items
         if ($product->orderItems()->count() > 0) {
-            return response()->json([
-                'message' => 'Cannot delete product with order history',
-            ], 422);
+            return ApiResponse::error('Cannot delete product with order history', 422);
         }
 
         $product->delete();
 
-        return response()->noContent();
+        return ApiResponse::success(['message' => 'Product deleted successfully']);
     }
 
-    public function featured(Request $request): AnonymousResourceCollection
+    public function featured(Request $request): JsonResponse
     {
         $products = Product::query()
             ->with(['categories', 'activeVariants'])
@@ -174,13 +174,12 @@ class ProductController extends Controller
             ->featured()
             ->inStock()
             ->orderBy('created_at', 'desc')
-            ->limit($request->input('limit', 8))
-            ->get();
+            ->paginate($request->input('per_page', 12));
 
-        return ProductResource::collection($products);
+        return ApiResponse::paginated($products);
     }
 
-    public function related(Product $product, Request $request): AnonymousResourceCollection
+    public function related(Product $product, Request $request): JsonResponse
     {
         $categoryIds = $product->categories()->pluck('categories.id');
 
@@ -197,10 +196,10 @@ class ProductController extends Controller
             ->limit($request->input('limit', 4))
             ->get();
 
-        return ProductResource::collection($products);
+        return ApiResponse::success(ProductResource::collection($products));
     }
 
-    public function search(Request $request): AnonymousResourceCollection
+    public function search(Request $request): JsonResponse
     {
         $request->validate([
             'q' => 'required|string|min:2',
@@ -218,6 +217,6 @@ class ProductController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate($request->input('per_page', 12));
 
-        return ProductResource::collection($products);
+        return ApiResponse::paginated($products);
     }
 }

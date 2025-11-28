@@ -28,10 +28,8 @@ class AddressFactory extends Factory
             'address_line_2' => fake()->optional(0.3)->secondaryAddress(),
             'city' => fake()->city(),
             'state' => fake()->state(),
-            'state_code' => fake()->stateAbbr(),
             'postal_code' => fake()->postcode(),
             'country' => fake()->country(),
-            'country_code' => fake()->countryCode(),
             'phone' => fake()->phoneNumber(),
             'email' => fake()->email(),
             'is_default' => fake()->boolean(20), // 20% chance of being default
@@ -111,9 +109,7 @@ class AddressFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'country' => 'United States',
-            'country_code' => 'US',
             'state' => fake()->state(),
-            'state_code' => fake()->stateAbbr(),
             'postal_code' => fake()->postcode(),
         ]);
     }
@@ -125,9 +121,7 @@ class AddressFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'country' => 'Canada',
-            'country_code' => 'CA',
             'state' => fake()->randomElement(['Ontario', 'Quebec', 'British Columbia', 'Alberta', 'Manitoba']),
-            'state_code' => fake()->randomElement(['ON', 'QC', 'BC', 'AB', 'MB']),
             'postal_code' => fake()->bothify('?#? #?#'),
         ]);
     }
@@ -139,9 +133,7 @@ class AddressFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'country' => 'United Kingdom',
-            'country_code' => 'GB',
             'state' => fake()->randomElement(['England', 'Scotland', 'Wales', 'Northern Ireland']),
-            'state_code' => fake()->randomElement(['ENG', 'SCT', 'WLS', 'NIR']),
             'postal_code' => fake()->postcode(),
         ]);
     }

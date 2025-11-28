@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\OrderResource;
+use App\Http\Responses\ApiResponse;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Cart;
 use App\Models\Address;
 use App\Models\Payment;
@@ -16,7 +18,7 @@ use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
-    public function index(Request $request): AnonymousResourceCollection
+    public function index(Request $request): JsonResponse
     {
         $orders = Order::query()
             ->where('user_id', $request->user()->id)
@@ -30,19 +32,19 @@ class OrderController extends Controller
             ->recent()
             ->paginate($request->input('per_page', 15));
 
-        return OrderResource::collection($orders);
+        return ApiResponse::paginated($orders);
     }
 
-    public function show(Request $request, Order $order): OrderResource
+    public function show(Request $request, Order $order): JsonResponse
     {
         // Ensure user can only view their own orders
         if ($order->user_id !== $request->user()->id) {
-            abort(403, 'Unauthorized');
+            return ApiResponse::error('Unauthorized', 403);
         }
 
         $order->load(['items.product', 'items.variant', 'payment', 'user']);
 
-        return new OrderResource($order);
+        return ApiResponse::success(new OrderResource($order));
     }
 
     public function store(Request $request): JsonResponse
@@ -81,17 +83,13 @@ class OrderController extends Controller
             $cart = $user->getCart();
 
             if ($cart->isEmpty()) {
-                return response()->json([
-                    'message' => 'Cannot create order with empty cart',
-                ], 422);
+                return ApiResponse::error('Cannot create order with empty cart', 422);
             }
 
             // Check stock availability
             foreach ($cart->items as $item) {
                 if (!$item->is_available) {
-                    return response()->json([
-                        'message' => "Product '{$item->product_name}' is no longer available",
-                    ], 422);
+                    return ApiResponse::error("Product '{$item->product_name}' is no longer available", 422);
                 }
             }
 
@@ -149,7 +147,7 @@ class OrderController extends Controller
             // Load relationships for response
             $order->load(['items.product', 'items.variant', 'payment']);
 
-            return response()->json([
+            return ApiResponse::success([
                 'message' => 'Order created successfully',
                 'order' => new OrderResource($order),
             ], 201);
@@ -160,18 +158,16 @@ class OrderController extends Controller
     {
         // Ensure user can only cancel their own orders
         if ($order->user_id !== $request->user()->id) {
-            abort(403, 'Unauthorized');
+            return ApiResponse::error('Unauthorized', 403);
         }
 
         if (!$order->canBeCancelled()) {
-            return response()->json([
-                'message' => 'Order cannot be cancelled',
-            ], 422);
+            return ApiResponse::error('Order cannot be cancelled', 422);
         }
 
         $order->cancel();
 
-        return response()->json([
+        return ApiResponse::success([
             'message' => 'Order cancelled successfully',
             'order' => new OrderResource($order->load(['items.product', 'items.variant', 'payment'])),
         ]);
@@ -181,10 +177,10 @@ class OrderController extends Controller
     {
         // Ensure user can only track their own orders
         if ($order->user_id !== $request->user()->id) {
-            abort(403, 'Unauthorized');
+            return ApiResponse::error('Unauthorized', 403);
         }
 
-        return response()->json([
+        return ApiResponse::success([
             'order_number' => $order->order_number,
             'status' => $order->status,
             'status_label' => $order->status_label,

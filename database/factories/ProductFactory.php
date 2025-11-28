@@ -22,7 +22,7 @@ class ProductFactory extends Factory
             'slug' => fake()->unique()->slug(2),
             'description' => fake()->sentence(10),
             'short_description' => fake()->sentence(5),
-            'sku' => 'PRD-' . fake()->unique()->bothify('strtoupper'),
+            'sku' => 'PRD-' . fake()->bothify('??????'),
             'price' => fake()->randomFloat(10, 2, 1000),
             'compare_price' => fake()->randomFloat(10, 2, 2000),
             'cost_price' => fake()->randomFloat(10, 2, 500),

@@ -1,0 +1,1032 @@
+{
+  "info": {
+    "name": "E-Commerce API Collection",
+    "description": "Complete Postman collection for the Laravel E-Commerce API. This collection includes all endpoints for products, categories, cart, orders, payments, wishlists, addresses, coupons, and admin management.\n\n## API Overview\n- **Version**: v1\n- **Authentication**: Laravel Sanctum (Bearer Token)\n- **Base URL**: {{base_url}}\n- **Rate Limiting**: 60 requests per minute for authenticated endpoints\n\n## Environment Variables\nSet these in your Postman environment:\n- `base_url`: Your API base URL (e.g., http://localhost:8000/api)\n- `token`: Bearer token for authenticated requests\n- `user_id`: User ID for testing\n- `product_id`: Product ID for testing\n- `category_id`: Category ID for testing\n- `order_id`: Order ID for testing\n- `cart_item_id`: Cart item ID for testing\n- `wishlist_id`: Wishlist ID for testing\n- `address_id`: Address ID for testing\n- `coupon_id`: Coupon ID for testing\n- `payment_id`: Payment ID for testing\n\n## Authentication\nFor protected endpoints, include the Authorization header:\n`Authorization: Bearer {{token}}`\n\n## Response Format\nAll responses follow a consistent JSON structure:\n```json\n{\n  \"success\": true,\n  \"data\": {...},\n  \"message\": \"Optional message\"\n}\n```\n\n## Error Responses\nError responses include appropriate HTTP status codes and error details.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Public Endpoints",
+      "description": "Endpoints that don't require authentication",
+      "item": [
+        {
+          "name": "Categories",
+          "item": [
+            {
+              "name": "Get All Categories",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/v1/categories",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "categories"]
+                },
+                "description": "Retrieve all categories with optional filtering.\n\n**Query Parameters:**\n- `featured` (boolean): Get only featured categories\n- `root_only` (boolean): Get only root categories\n- `parent_id` (integer): Get children of specific parent\n\n**Response:** List of categories with hierarchical structure."
+              }
+            },
+            {
+              "name": "Get Category Tree",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/v1/categories/tree",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "categories", "tree"]
+                },
+                "description": "Get complete category tree structure.\n\n**Response:** Hierarchical category structure with children."
+              }
+            },
+            {
+              "name": "Get Category Details",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/v1/categories/{{category_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "categories", "{{category_id}}"]
+                },
+                "description": "Get detailed information about a specific category including associated products.\n\n**Response:** Category details with products."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Products",
+          "item": [
+            {
+              "name": "Get All Products",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/v1/products?per_page=12",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "products"],
+                  "query": [
+                    {
+                      "key": "per_page",
+                      "value": "12"
+                    }
+                  ]
+                },
+                "description": "Retrieve products with advanced filtering and pagination.\n\n**Query Parameters:**\n- `category_id`: Filter by category\n- `featured`: Get featured products only\n- `in_stock`: Get in-stock products only\n- `min_price`, `max_price`: Price range\n- `search`: Search in name/description/SKU\n- `sort`: price_low, price_high, name_asc, name_desc, newest, oldest\n- `per_page`: Items per page\n\n**Response:** Paginated product list."
+              }
+            },
+            {
+              "name": "Get Featured Products",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/v1/products/featured?limit=8",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "products", "featured"],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "8"
+                    }
+                  ]
+                },
+                "description": "Get featured products for homepage display.\n\n**Query Parameters:**\n- `limit`: Number of products to return\n\n**Response:** Array of featured products."
+              }
+            },
+            {
+              "name": "Get Related Products",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/v1/products/{{product_id}}/related?limit=4",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "products", "{{product_id}}", "related"],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "4"
+                    }
+                  ]
+                },
+                "description": "Get products related to a specific product based on categories.\n\n**Query Parameters:**\n- `limit`: Number of related products\n\n**Response:** Array of related products."
+              }
+            },
+            {
+              "name": "Search Products",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/v1/products/search?q=laptop&per_page=12",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "products", "search"],
+                  "query": [
+                    {
+                      "key": "q",
+                      "value": "laptop"
+                    },
+                    {
+                      "key": "per_page",
+                      "value": "12"
+                    }
+                  ]
+                },
+                "description": "Search products by name, description, or SKU.\n\n**Query Parameters:**\n- `q`: Search query (required, min 2 characters)\n- `per_page`: Items per page\n\n**Response:** Paginated search results."
+              }
+            },
+            {
+              "name": "Get Product Details",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/v1/products/{{product_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "products", "{{product_id}}"]
+                },
+                "description": "Get detailed information about a specific product including variants and categories.\n\n**Response:** Complete product details."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Coupons",
+          "item": [
+            {
+              "name": "Validate Coupon",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"code\": \"SAVE10\",\n  \"amount\": 100.00\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/coupons/validate",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "coupons", "validate"]
+                },
+                "description": "Validate a coupon code for a specific order amount.\n\n**Request Body:**\n```json\n{\n  \"code\": \"COUPON_CODE\",\n  \"amount\": 100.00\n}\n```\n\n**Response:** Coupon validity and discount amount."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Protected Endpoints",
+      "description": "Endpoints that require authentication (Bearer token)",
+      "item": [
+        {
+          "name": "Language Management",
+          "item": [
+            {
+              "name": "Get Supported Languages",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/languages",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "languages"]
+                },
+                "description": "Get list of all supported languages.\n\n**Response:** Array of supported languages with metadata."
+              }
+            },
+            {
+              "name": "Switch Language",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"locale\": \"es\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/languages/switch",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "languages", "switch"]
+                },
+                "description": "Switch the current language for the user session.\n\n**Request Body:**\n```json\n{\n  \"locale\": \"es\"\n}\n```\n\n**Response:** Language switch confirmation."
+              }
+            },
+            {
+              "name": "Get Current Language",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/languages/current",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "languages", "current"]
+                },
+                "description": "Get information about the currently active language.\n\n**Response:** Current language details."
+              }
+            },
+            {
+              "name": "Get Translations",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/languages/translations?locale=en",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "languages", "translations"],
+                  "query": [
+                    {
+                      "key": "locale",
+                      "value": "en"
+                    }
+                  ]
+                },
+                "description": "Get translation strings for JavaScript/frontend use.\n\n**Query Parameters:**\n- `locale`: Language code\n\n**Response:** Translation key-value pairs."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cart Management",
+          "item": [
+            {
+              "name": "Get Cart",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/cart",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "cart"]
+                },
+                "description": "Get the current user's cart with all items.\n\n**Response:** Complete cart details with items and totals."
+              }
+            },
+            {
+              "name": "Add Item to Cart",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"product_id\": 1,\n  \"quantity\": 2,\n  \"variant_id\": null\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/cart/items",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "cart", "items"]
+                },
+                "description": "Add a product to the cart.\n\n**Request Body:**\n```json\n{\n  \"product_id\": 1,\n  \"quantity\": 2,\n  \"variant_id\": null\n}\n```\n\n**Response:** Updated cart with new item."
+              }
+            },
+            {
+              "name": "Update Cart Item",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"quantity\": 3\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/cart/items/{{cart_item_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "cart", "items", "{{cart_item_id}}"]
+                },
+                "description": "Update the quantity of a cart item.\n\n**Request Body:**\n```json\n{\n  \"quantity\": 3\n}\n```\n\n**Response:** Updated cart."
+              }
+            },
+            {
+              "name": "Remove Cart Item",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/cart/items/{{cart_item_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "cart", "items", "{{cart_item_id}}"]
+                },
+                "description": "Remove an item from the cart.\n\n**Response:** Updated cart without the item."
+              }
+            },
+            {
+              "name": "Clear Cart",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/cart",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "cart"]
+                },
+                "description": "Remove all items from the cart.\n\n**Response:** Empty cart."
+              }
+            },
+            {
+              "name": "Apply Coupon to Cart",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"code\": \"SAVE10\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/cart/coupon",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "cart", "coupon"]
+                },
+                "description": "Apply a coupon code to the cart.\n\n**Request Body:**\n```json\n{\n  \"code\": \"SAVE10\"\n}\n```\n\n**Response:** Updated cart with discount applied."
+              }
+            },
+            {
+              "name": "Remove Coupon from Cart",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/cart/coupon",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "cart", "coupon"]
+                },
+                "description": "Remove the applied coupon from the cart.\n\n**Response:** Updated cart without discount."
+              }
+            },
+            {
+              "name": "Get Cart Summary",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/cart/summary",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "cart", "summary"]
+                },
+                "description": "Get a summary of the cart with totals.\n\n**Response:** Cart totals and item count."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Order Management",
+          "item": [
+            {
+              "name": "Get User Orders",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/orders?per_page=15",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "orders"],
+                  "query": [
+                    {
+                      "key": "per_page",
+                      "value": "15"
+                    }
+                  ]
+                },
+                "description": "Get all orders for the authenticated user.\n\n**Query Parameters:**\n- `status`: Filter by order status\n- `payment_status`: Filter by payment status\n- `per_page`: Items per page\n\n**Response:** Paginated list of user orders."
+              }
+            },
+            {
+              "name": "Get Order Details",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/orders/{{order_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "orders", "{{order_id}}"]
+                },
+                "description": "Get detailed information about a specific order.\n\n**Response:** Complete order details with items and payment info."
+              }
+            },
+            {
+              "name": "Create Order",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"shipping_address\": {\n    \"first_name\": \"John\",\n    \"last_name\": \"Doe\",\n    \"address_line_1\": \"123 Main St\",\n    \"city\": \"New York\",\n    \"state\": \"NY\",\n    \"postal_code\": \"10001\",\n    \"country\": \"US\",\n    \"phone\": \"+1234567890\"\n  },\n  \"billing_address\": {\n    \"first_name\": \"John\",\n    \"last_name\": \"Doe\",\n    \"address_line_1\": \"123 Main St\",\n    \"city\": \"New York\",\n    \"state\": \"NY\",\n    \"postal_code\": \"10001\",\n    \"country\": \"US\",\n    \"phone\": \"+1234567890\"\n  },\n  \"payment_method\": \"stripe\",\n  \"notes\": \"Please handle with care\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/orders",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "orders"]
+                },
+                "description": "Create a new order from the current cart.\n\n**Request Body:** Complete order information including addresses and payment method.\n\n**Response:** Created order details."
+              }
+            },
+            {
+              "name": "Cancel Order",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/orders/{{order_id}}/cancel",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "orders", "{{order_id}}", "cancel"]
+                },
+                "description": "Cancel a pending order.\n\n**Response:** Updated order with cancelled status."
+              }
+            },
+            {
+              "name": "Track Order",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/orders/{{order_id}}/track",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "orders", "{{order_id}}", "track"]
+                },
+                "description": "Get tracking information for an order.\n\n**Response:** Order status and tracking details."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Wishlist Management",
+          "item": [
+            {
+              "name": "Get User Wishlists",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/wishlists",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "wishlists"]
+                },
+                "description": "Get all wishlists for the authenticated user.\n\n**Response:** List of user wishlists with items."
+              }
+            },
+            {
+              "name": "Get Wishlist Details",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/wishlists/{{wishlist_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "wishlists", "{{wishlist_id}}"]
+                },
+                "description": "Get detailed information about a specific wishlist.\n\n**Response:** Wishlist details with all items."
+              }
+            },
+            {
+              "name": "Create Wishlist",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"My Favorites\",\n  \"is_public\": false,\n  \"notes\": \"My favorite products\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/wishlists",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "wishlists"]
+                },
+                "description": "Create a new wishlist.\n\n**Request Body:**\n```json\n{\n  \"name\": \"Wishlist Name\",\n  \"is_public\": false,\n  \"notes\": \"Optional notes\"\n}\n```\n\n**Response:** Created wishlist details."
+              }
+            },
+            {
+              "name": "Update Wishlist",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Updated Name\",\n  \"is_public\": true\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/wishlists/{{wishlist_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "wishlists", "{{wishlist_id}}"]
+                },
+                "description": "Update an existing wishlist.\n\n**Request Body:** Updated wishlist information.\n\n**Response:** Updated wishlist details."
+              }
+            },
+            {
+              "name": "Delete Wishlist",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/wishlists/{{wishlist_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "wishlists", "{{wishlist_id}}"]
+                },
+                "description": "Delete a wishlist.\n\n**Response:** Success confirmation."
+              }
+            },
+            {
+              "name": "Add Item to Wishlist",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"product_id\": 1,\n  \"variant_id\": null,\n  \"notes\": \"Love this product\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/wishlists/{{wishlist_id}}/items",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "wishlists", "{{wishlist_id}}", "items"]
+                },
+                "description": "Add a product to a wishlist.\n\n**Request Body:**\n```json\n{\n  \"product_id\": 1,\n  \"variant_id\": null,\n  \"notes\": \"Optional notes\"\n}\n```\n\n**Response:** Added wishlist item."
+              }
+            },
+            {
+              "name": "Remove Item from Wishlist",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/wishlists/{{wishlist_id}}/items/{{item_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "wishlists", "{{wishlist_id}}", "items", "{{item_id}}"]
+                },
+                "description": "Remove an item from a wishlist.\n\n**Response:** Success confirmation."
+              }
+            },
+            {
+              "name": "Move Item to Cart",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"quantity\": 1\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/wishlists/{{wishlist_id}}/items/{{item_id}}/move-to-cart",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "wishlists", "{{wishlist_id}}", "items", "{{item_id}}", "move-to-cart"]
+                },
+                "description": "Move an item from wishlist to cart.\n\n**Request Body:**\n```json\n{\n  \"quantity\": 1\n}\n```\n\n**Response:** Cart item details."
+              }
+            },
+            {
+              "name": "Clear Wishlist",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/wishlists/{{wishlist_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "wishlists", "{{wishlist_id}}"]
+                },
+                "description": "Remove all items from a wishlist.\n\n**Response:** Success confirmation."
+              }
+            },
+            {
+              "name": "Get Default Wishlist",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/wishlists/default",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "wishlists", "default"]
+                },
+                "description": "Get the user's default wishlist.\n\n**Response:** Default wishlist with items."
+              }
+            },
+            {
+              "name": "Check Product in Wishlist",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/wishlists/check-product?product_id=1",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "wishlists", "check-product"],
+                  "query": [
+                    {
+                      "key": "product_id",
+                      "value": "1"
+                    }
+                  ]
+                },
+                "description": "Check if a product is in the user's default wishlist.\n\n**Query Parameters:**\n- `product_id`: Product ID to check\n- `variant_id`: Variant ID (optional)\n\n**Response:** Whether product exists in wishlist."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Address Management",
+          "item": [
+            {
+              "name": "Get User Addresses",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/addresses",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "addresses"]
+                },
+                "description": "Get all addresses for the authenticated user.\n\n**Response:** List of user addresses."
+              }
+            },
+            {
+              "name": "Create Address",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"company\": \"Company Inc\",\n  \"address_line_1\": \"123 Main St\",\n  \"address_line_2\": \"Apt 4B\",\n  \"city\": \"New York\",\n  \"state\": \"NY\",\n  \"postal_code\": \"10001\",\n  \"country\": \"US\",\n  \"phone\": \"+1234567890\",\n  \"email\": \"john@example.com\",\n  \"type\": \"shipping\",\n  \"is_default\": true\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/addresses",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "addresses"]
+                },
+                "description": "Create a new address for the user.\n\n**Request Body:** Complete address information.\n\n**Response:** Created address details."
+              }
+            },
+            {
+              "name": "Get Address Details",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/addresses/{{address_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "addresses", "{{address_id}}"]
+                },
+                "description": "Get detailed information about a specific address.\n\n**Response:** Address details."
+              }
+            },
+            {
+              "name": "Update Address",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"first_name\": \"Jane\",\n  \"last_name\": \"Doe\",\n  \"city\": \"Los Angeles\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/addresses/{{address_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "addresses", "{{address_id}}"]
+                },
+                "description": "Update an existing address.\n\n**Request Body:** Updated address fields.\n\n**Response:** Updated address details."
+              }
+            },
+            {
+              "name": "Delete Address",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/addresses/{{address_id}}",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "addresses", "{{address_id}}"]
+                },
+                "description": "Delete an address.\n\n**Response:** Success confirmation."
+              }
+            },
+            {
+              "name": "Set Default Address",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/addresses/{{address_id}}/set-default",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "addresses", "{{address_id}}", "set-default"]
+                },
+                "description": "Set an address as the default address.\n\n**Response:** Updated address as default."
+              }
+            },
+            {
+              "name": "Get Addresses by Type",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/addresses/type/shipping",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "addresses", "type", "shipping"]
+                },
+                "description": "Get addresses filtered by type (shipping, billing, both).\n\n**Response:** Filtered list of addresses."
+              }
+            },
+            {
+              "name": "Validate Address",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"address_line_1\": \"123 Main St\",\n  \"city\": \"New York\",\n  \"state\": \"NY\",\n  \"postal_code\": \"10001\",\n  \"country\": \"US\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/v1/addresses/validate",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "addresses", "validate"]
+                },
+                "description": "Validate an address using external validation service.\n\n**Request Body:** Address to validate.\n\n**Response:** Validation results and suggestions."
+              }
+            },
+            {
+              "name": "Get Countries",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/addresses/countries",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "addresses", "countries"]
+                },
+                "description": "Get list of supported countries for address forms.\n\n**Response:** Array of countries with codes and names."
+              }
+            },
+            {
+              "name": "Get States/Provinces",
+              "request": {
+                "method": "GET",
+                "header":
+[
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/v1/addresses/states?country=US",
+                  "host": ["{{base_url}}"],
+                  "path": ["v1", "addresses", "states"],
+                  "query": [
+                    {
+                      "key": "country",
+                      "value": "US"
+                    }
+                  ]
+                },
+                "description": "Get list of states/provinces for a specific country.\n\n**Query Parameters:**\n- `country`: Country code (required)\n\n**Response:** Array of states/provinces with codes and names."
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
